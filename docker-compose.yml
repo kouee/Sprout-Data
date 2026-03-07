@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mosquitto-mqtt:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: mqtt-broker1
+    ports:
+      - "1883:1883" # MQTT port
+      - "9001:9001" # WebSocket (optional)
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: unless-stopped
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: sprout
+      INFLUXDB_ADMIN_USER: user
+      INFLUXDB_ADMIN_PASSWORD: pass
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: pass
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - influxdb
+    restart: unless-stopped
+
+  app:
+    build: ./app
+    depends_on:
+      - mosquitto-mqtt
+      - influxdb
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  influxdb_data:
+  grafana_data:
