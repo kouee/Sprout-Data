@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mosquitto-mqtt:
     build:
@@ -46,6 +44,7 @@ services:
     depends_on:
       - mosquitto-mqtt
       - influxdb
+    restart: unless-stopped
 
 volumes:
   mosquitto_data:
